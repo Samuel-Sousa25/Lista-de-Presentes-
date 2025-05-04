@@ -1,172 +1,136 @@
+
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-  <meta charset="UTF-8">
-  <title>Lista de Presentes - Casamento</title>
-  <style>
-    body {
-      font-family: 'Arial', sans-serif;
-      background: #fefefe;
-      color: #444;
-      margin: 0;
-      padding: 20px;
-    }
-    h1 {
-      text-align: center;
-      color: #ff6f61;
-    }
-    .presentes {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-      gap: 20px;
-      margin-top: 30px;
-    }
-    .presente {
-      background: #fff;
-      border: 2px solid #ffe0e0;
-      border-radius: 10px;
-      padding: 15px;
-      text-align: center;
-      transition: background 0.3s;
-      position: relative;
-    }
-    .presente img {
-      width: 100%;
-      height: 200px;
-      object-fit: cover;
-      border-radius: 8px;
-    }
-    .presente h3 {
-      margin-top: 10px;
-      color: #333;
-    }
-    .presente button {
-      margin-top: 10px;
-      background: #ff6f61;
-      color: white;
-      border: none;
-      padding: 10px 20px;
-      border-radius: 5px;
-      cursor: pointer;
-      font-size: 16px;
-    }
-    .presente button:hover {
-      background: #ff4b3e;
-    }
-    .reservado {
-      background: #d3d3d3;
-      pointer-events: none;
-    }
-    .reservado::after {
-      content: "Presente já reservado!";
-      position: absolute;
-      top: 10px;
-      left: 10px;
-      background: #555;
-      color: white;
-      padding: 5px 10px;
-      font-size: 14px;
-      border-radius: 5px;
-    }
-    .sugestao {
-      margin-top: 10px;
-      font-size: 14px;
-      color: #555;
-      font-style: italic;
-    }
-  </style>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Lista de Presentes - Samuel & Lorrane</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            background: #fff8f4;
+            margin: 0;
+            padding: 0;
+            color: #333;
+        }
+        header {
+            text-align: center;
+            padding: 2rem;
+            background: #fceeea;
+            color: #8a5d5d;
+        }
+        header h1 {
+            margin: 0;
+            font-size: 2.5rem;
+        }
+        .container {
+            max-width: 960px;
+            margin: 2rem auto;
+            padding: 0 1rem;
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+            gap: 1.5rem;
+        }
+        .gift {
+            border: 1px solid #eee;
+            border-radius: 12px;
+            padding: 1rem;
+            background: #fff;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+            text-align: center;
+            transition: transform 0.2s ease;
+        }
+        .gift:hover {
+            transform: scale(1.02);
+        }
+        .gift img {
+            max-width: 100%;
+            border-radius: 8px;
+        }
+        .reserved {
+            background-color: #eaeaea;
+            opacity: 0.6;
+        }
+        .reserved .status {
+            color: #aa0000;
+            font-weight: bold;
+        }
+        button {
+            padding: 0.5rem 1rem;
+            background: #ff8c8c;
+            border: none;
+            border-radius: 8px;
+            color: white;
+            cursor: pointer;
+            margin-top: 0.5rem;
+        }
+        button:hover {
+            background: #e57474;
+        }
+        input {
+            padding: 0.5rem;
+            border-radius: 6px;
+            border: 1px solid #ccc;
+            width: 80%;
+            margin-top: 0.5rem;
+        }
+    </style>
 </head>
 <body>
+    <header>
+        <h1>Lista de Presentes</h1>
+        <p>Com amor, Samuel & Lorrane</p>
+    </header>
+    <div class="container" id="gift-list">
+        <!-- Presentes serão inseridos aqui pelo JavaScript -->
+    </div>
 
-<h1>Lista de Presentes de Casamento</h1>
+    <script>
+        const sheetAPI = "https://script.google.com/macros/s/AKfycbzN-dkGEvbt2CU4e4qedzHYWqvLvFds7v0GLHFs7L7QSDrpvwQ7xy4YxIri50PjU5FM/exec";
 
-<div class="presentes" id="presentesContainer">
-  <!-- Presentes serão carregados aqui -->
-</div>
+        async function fetchGifts() {
+            const res = await fetch(sheetAPI);
+            const data = await res.json();
+            const container = document.getElementById("gift-list");
+            container.innerHTML = "";
+            
+            data.gifts.forEach(gift => {
+                const div = document.createElement("div");
+                div.className = "gift" + (gift.reserved ? " reserved" : "");
+                div.innerHTML = `
+                    <img src="${gift.image}" alt="${gift.name}">
+                    <h3>${gift.name}</h3>
+                    <p>${gift.description}</p>
+                    ${gift.reserved ? 
+                        `<p class="status">Reservado por ${gift.reserved_by}</p>
+                         <p><em>Sugestão alternativa: ${gift.suggestion || "Outra opção de valor semelhante"}</em></p>` :
+                        `<input type="text" placeholder="Seu nome e sobrenome" id="name-${gift.id}"/>
+                         <button onclick="reserveGift('${gift.id}')">Presentear</button>`}
+                `;
+                container.appendChild(div);
+            });
+        }
 
-<!-- Modal simples para escolher presente -->
-<div id="modal" style="display:none; position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.5); align-items:center; justify-content:center;">
-  <div style="background:white; padding:20px; border-radius:10px; width:300px; text-align:center;">
-    <h2>Confirme seu presente</h2>
-    <input type="text" id="nome" placeholder="Nome" style="margin:5px 0; width:100%; padding:8px;">
-    <input type="text" id="sobrenome" placeholder="Sobrenome" style="margin:5px 0; width:100%; padding:8px;">
-    <button onclick="confirmarReserva()">Confirmar</button>
-    <br><br>
-    <button onclick="fecharModal()" style="background:gray;">Cancelar</button>
-  </div>
-</div>
+        async function reserveGift(id) {
+            const input = document.getElementById(`name-${id}`);
+            const name = input.value.trim();
+            if (!name) return alert("Por favor, insira seu nome e sobrenome.");
 
-<script>
-  const presentes = [
-    {
-      id: 1,
-      nome: "Liquidificador",
-      imagem: "https://via.placeholder.com/250?text=Liquidificador",
-      reservado: false,
-      sugestao: "Espremedor de frutas"
-    },
-    {
-      id: 2,
-      nome: "Jogo de Cama Queen",
-      imagem: "https://via.placeholder.com/250?text=Jogo+de+Cama",
-      reservado: false,
-      sugestao: "Jogo de Toalhas"
-    },
-    {
-      id: 3,
-      nome: "Conjunto de Pratos",
-      imagem: "https://via.placeholder.com/250?text=Pratos",
-      reservado: false,
-      sugestao: "Conjunto de Copos"
-    }
-  ];
+            const res = await fetch(sheetAPI, {
+                method: "POST",
+                body: JSON.stringify({ id, name }),
+                headers: { "Content-Type": "application/json" }
+            });
 
-  let presenteSelecionado = null;
+            if (res.ok) {
+                alert("Obrigado por reservar este presente! ❤️");
+                fetchGifts();
+            } else {
+                alert("Algo deu errado. Tente novamente.");
+            }
+        }
 
-  function carregarPresentes() {
-    const container = document.getElementById('presentesContainer');
-    container.innerHTML = '';
-    presentes.forEach(p => {
-      const card = document.createElement('div');
-      card.className = 'presente' + (p.reservado ? ' reservado' : '');
-      card.innerHTML = `
-        <img src="${p.imagem}" alt="${p.nome}">
-        <h3>${p.nome}</h3>
-        ${p.reservado ? `<div class="sugestao">Sugestão: ${p.sugestao}</div>` : `<button onclick="reservarPresente(${p.id})">Quero presentear</button>`}
-      `;
-      container.appendChild(card);
-    });
-  }
-
-  function reservarPresente(id) {
-    presenteSelecionado = id;
-    document.getElementById('modal').style.display = 'flex';
-  }
-
-  function fecharModal() {
-    document.getElementById('modal').style.display = 'none';
-  }
-
-  function confirmarReserva() {
-    const nome = document.getElementById('nome').value.trim();
-    const sobrenome = document.getElementById('sobrenome').value.trim();
-    if (!nome || !sobrenome) {
-      alert("Por favor, preencha seu nome e sobrenome.");
-      return;
-    }
-    const presente = presentes.find(p => p.id === presenteSelecionado);
-    if (presente) {
-      presente.reservado = true;
-      presente.reservadoPor = `${nome} ${sobrenome}`;
-    }
-    fecharModal();
-    carregarPresentes();
-    // Aqui vamos depois integrar com Google Sheets para salvar de verdade
-  }
-
-  // Inicializar
-  carregarPresentes();
-</script>
-
+        fetchGifts();
+    </script>
 </body>
 </html>
